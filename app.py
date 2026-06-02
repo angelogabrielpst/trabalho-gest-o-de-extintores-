@@ -4,12 +4,12 @@ from datetime import date
 
 app = Flask(__name__)
 
-# Database configuration
+# Conectar com o Banco de Dados
 db_config = {
     'host': 'localhost',
-    'database': 'your_database',
-    'user': 'your_username',
-    'password': 'your_password'
+    'database': 'sst_extintores_db',
+    'user': 'root',
+    'password': '0000'
 }
 
 def get_db_connection():
@@ -59,9 +59,9 @@ class extintores:
         self.localizacao_detalhada = localizacao_detalhada
         self.id_brigadista_responsavel = id_brigadista_responsavel #FK Brigadista
         self.validade_carga = validade_carga
-        self.data_aquisicao = data_aquisicao
-        self.data_ultima_recarga = data_ultima_recarga
-        self.status = status
+        self.data_aquisicao = data_aquisicao #Adicionar no Sql
+        self.data_ultima_recarga = data_ultima_recarga #Adicionar
+        self.status = status #Adicionar
 
 class inspecoes_extintores:
     def __init__(self, numero_patrimonio, data_inspecao, status_manometro, status_carga, status_agente_disparo, lacre_rompido, validade_teste_nivel1, validade_teste_nivel2, validade_teste_nivel3, integridade_visual, arquivo_evidencia_imagem_path, id_inspecao=None):
@@ -69,7 +69,7 @@ class inspecoes_extintores:
         self.numero_patrimonio = numero_patrimonio #FK extintores
         self.data_inspecao = data_inspecao
         self.status_manometro = status_manometro
-        self.status_carga = status_carga
+        self.status_carga = status_carga # Adicionar no Sql
         self.status_agente_disparo = status_agente_disparo
         self.lacre_rompido = lacre_rompido
         self.validade_teste_nivel1 = validade_teste_nivel1
@@ -171,9 +171,9 @@ def cadastrar_extintor():
             dados['localizacao_detalhada'],
             dados['id_brigadista_responsavel'],
             dados['validade_carga'],
-            dados['data_aquisicao'],
-            dados['data_ultima_recarga'],
-            dados['status']
+            dados['data_aquisicao'], #
+            dados['data_ultima_recarga'], #
+            dados['status'] #
         )
     )
 
@@ -218,9 +218,9 @@ def atualizar_extintor(numero_patrimonio):
             dados['localizacao_detalhada'],
             dados['id_brigadista_responsavel'],
             dados['validade_carga'],
-            dados['data_aquisicao'],
-            dados['data_ultima_recarga'],
-            dados['status'],
+            dados['data_aquisicao'], #
+            dados['data_ultima_recarga'], #
+            dados['status'], #
             numero_patrimonio
         )
     )
@@ -253,7 +253,7 @@ def cadastrar_inspecao():
             dados['numero_patrimonio'],
             dados['data_inspecao'],
             dados['status_manometro'],
-            dados['status_carga'],
+            dados['status_carga'], #
             dados['status_agente_disparo'],
             dados['lacre_rompido'],
             dados['validade_teste_nivel1'],
@@ -322,3 +322,7 @@ def deletar_inspecao(id_inspecao):
     executar_sql("DELETE FROM inspecoes_extintores WHERE id_inspecao = %s", (id_inspecao,))
 
     return jsonify({"mensagem": "Inspeção deletada."})
+
+if __name__ == '__main__':
+    # Precisa disso aqui pra fazer o debug
+    app.run(host='127.0.0.1', port=5000, debug=True)
