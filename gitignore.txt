@@ -1,2 +1,13 @@
+# Bloquear o arquivo de credenciais sensíveis
+.env
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Ambientes Virtuais e VS Code
+venv/
+.venv/
+.vscode/
 #Bloqueio de vizualizacao no ghithub
 .env
