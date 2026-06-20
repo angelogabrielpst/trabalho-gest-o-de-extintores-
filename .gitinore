@@ -1,1 +1,13 @@
+# Bloquear o arquivo de credenciais sensíveis (Obrigatório)
+.env
 
+# Cache do Python (Evita arquivos inúteis de compilação)
+_pycache_/
+*.pyc
+
+# Configurações locais do ambiente virtual (se estiver a usar)
+venv/
+.venv/
+
+# Configurações locais do VS Code
+.vscode/
