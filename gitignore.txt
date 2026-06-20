@@ -1,0 +1,2 @@
+#Bloqueio de vizualizacao no ghithub
+.env
