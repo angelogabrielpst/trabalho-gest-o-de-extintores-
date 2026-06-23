@@ -15,7 +15,6 @@ twilio_client = Client(os.getenv('TWILIO_ACCOUNT_SID'), os.getenv('TWILIO_AUTH_T
 
 # Conectar com o Banco de Dados
 def get_db_connection():
-    
     host_banco = os.getenv('DB_HOST') or '127.0.0.1'
     if host_banco == '.':
         host_banco = '127.0.0.1'
@@ -27,7 +26,7 @@ def get_db_connection():
         'database': os.getenv('DB_DATABASE'),
         'port': int(os.getenv('DB_PORT') or 3306)
     }
-    
+
     return mysql.connector.connect(**db_config)
 
 # ==========================================================
@@ -44,8 +43,7 @@ def formatar_para_twilio(telefone_raw):
         return f"+{numeros}"
     return numeros
 
-def enviar_sms(destinatario, mensagem):
-    tel_formatado = formatar_para_twilio(destinatario)
+def enviar_sms(tel_formatado, mensagem):
     if tel_formatado:
         twilio_client.messages.create(
             body=mensagem,
@@ -53,8 +51,7 @@ def enviar_sms(destinatario, mensagem):
             to=tel_formatado
         )
 
-def enviar_whatsapp(numero, mensagem):
-    tel_formatado = formatar_para_twilio(numero)
+def enviar_whatsapp(tel_formatado, mensagem):
     if tel_formatado:
         twilio_client.messages.create(
             body=mensagem,
@@ -142,7 +139,6 @@ class inspecoes_extintores:
 # ROTAS: SETORES
 # ==========================================================
 
-#Cadastrar Setor
 @app.route('/api/setores', methods=['POST'])
 def cadastrar_setor():
     dados = request.get_json()
@@ -152,13 +148,11 @@ def cadastrar_setor():
     )
     return jsonify({"mensagem": "Setor cadastrado"})
 
-#Listar Setores
 @app.route('/api/setores', methods=['GET'])
 def listar_setores():
     resultado = consultar_todos_sql("SELECT * FROM setores_loc")
     return jsonify(resultado)
 
-#Listar um Setor
 @app.route('/api/setores/<int:id_setor>', methods=['GET'])
 def listar_setor(id_setor):
     resultado = consultar_um_sql("SELECT * FROM setores_loc WHERE id_setor = %s", (id_setor,))
@@ -166,7 +160,6 @@ def listar_setor(id_setor):
         return jsonify(resultado)
     return jsonify({"mensagem": "Setor não encontrado"}), 404
 
-#Atualizar um Setor
 @app.route('/api/setores/<int:id_setor>', methods=['PUT'])
 def atualizar_setor(id_setor):
     dados = request.get_json()
@@ -176,7 +169,6 @@ def atualizar_setor(id_setor):
     )
     return jsonify({"mensagem": "Setor atualizado"})
 
-#Deletar um Setor
 @app.route('/api/setores/<int:id_setor>', methods=['DELETE'])
 def deletar_setor(id_setor):
     executar_sql("DELETE FROM setores_loc WHERE id_setor = %s", (id_setor,))
@@ -186,7 +178,6 @@ def deletar_setor(id_setor):
 # ROTAS: BRIGADISTAS
 # ==========================================================
 
-#Cadastrar um setor
 @app.route('/api/brigadistas', methods=['POST'])
 def cadastrar_brigadistas():
     dados = request.get_json()
@@ -199,13 +190,11 @@ def cadastrar_brigadistas():
     )
     return jsonify({"mensagem": "Brigadista cadastrado"})
 
-#Listar Brigadistas
 @app.route('/api/brigadistas', methods=['GET'])
 def listar_brigadistas():
     resultado = consultar_todos_sql("SELECT * FROM brigadistas")
     return jsonify(resultado)
 
-#Listar um Brigadista
 @app.route('/api/brigadistas/<int:id_brigadista>', methods=['GET'])
 def listar_brigadista(id_brigadista):
     resultado = consultar_um_sql("SELECT * FROM brigadistas WHERE id_brigadista = %s", (id_brigadista,))
@@ -213,7 +202,6 @@ def listar_brigadista(id_brigadista):
         return jsonify(resultado)
     return jsonify({"mensagem": "Brigadista não encontrado"}), 404
 
-#Atualizar Brigadista
 @app.route('/api/brigadistas/<int:id_brigadista>', methods=['PUT'])
 def atualizar_brigadista(id_brigadista):
     dados = request.get_json()
@@ -226,7 +214,6 @@ def atualizar_brigadista(id_brigadista):
     )
     return jsonify({"mensagem": "Brigadista atualizado"})
 
-#Deletar um Brigadista
 @app.route('/api/brigadistas/<int:id_brigadista>', methods=['DELETE'])
 def deletar_brigadista(id_brigadista):
     executar_sql("DELETE FROM brigadistas WHERE id_brigadista = %s", (id_brigadista,))
@@ -236,7 +223,6 @@ def deletar_brigadista(id_brigadista):
 # ROTAS: EXTINTORES
 # ==========================================================
 
-#Cadastrar Extintor
 @app.route('/api/extintores', methods=['POST'])
 def cadastrar_extintor():
     dados = request.get_json()
@@ -249,13 +235,11 @@ def cadastrar_extintor():
     )
     return jsonify({"mensagem": "Extintor cadastrado."})
 
-#Listar Extintores
 @app.route('/api/extintores', methods=['GET'])
 def listar_extintores():
     resultado = consultar_todos_sql("SELECT * FROM extintores")
     return jsonify(resultado)
 
-#Listar um Extintor
 @app.route('/api/extintores/<string:numero_patrimonio>', methods=['GET'])
 def listar_extintor(numero_patrimonio):
     resultado = consultar_um_sql("SELECT * FROM extintores WHERE numero_patrimonio = %s", (numero_patrimonio,))
@@ -263,7 +247,6 @@ def listar_extintor(numero_patrimonio):
         return jsonify(resultado)
     return jsonify({"mensagem": "Extintor não encontrado."}), 404
 
-#Atualizar Extintor
 @app.route('/api/extintores/<string:numero_patrimonio>', methods=['PUT'])
 def atualizar_extintor(numero_patrimonio):
     dados = request.get_json()
@@ -276,7 +259,6 @@ def atualizar_extintor(numero_patrimonio):
     )
     return jsonify({"mensagem": "Extintor updated."})
 
-#Deletar um extintor
 @app.route('/api/extintores/<string:numero_patrimonio>', methods=['DELETE'])
 def deletar_extintor(numero_patrimonio):
     executar_sql("DELETE FROM extintores WHERE numero_patrimonio = %s", (numero_patrimonio,))
@@ -286,7 +268,6 @@ def deletar_extintor(numero_patrimonio):
 # ROTAS: INSPEÇÕES
 # ==========================================================
 
-#Cadastrar Inspeção
 @app.route('/api/inspecoes', methods=['POST'])
 def cadastrar_inspecao():
     dados = request.get_json()
@@ -299,27 +280,21 @@ def cadastrar_inspecao():
     )
     return jsonify({"mensagem": "Inspeção cadastrada."})
 
-#Listar Inspeções
 @app.route('/api/inspecoes', methods=['GET'])
 def listar_inspecoes():
     resultado = consultar_todos_sql("SELECT * FROM inspecoes_extintores")
     return jsonify(resultado)
 
-#Listar uma Inspeção
 @app.route('/api/inspecoes/A/<string:numero_patrimonio>', methods=['GET'])
 def listar_inspecao(numero_patrimonio):
-
     resultado = consultar_um_sql(
         "SELECT * FROM inspecoes_extintores WHERE numero_patrimonio = %s",
         (numero_patrimonio,)
     )
-    
     if resultado:
         return jsonify(resultado), 200
-        
     return jsonify({"mensagem": "Inspeção não encontrada."}), 404
 
-#Listar Inspeção com Nome do Brigadista
 @app.route('/api/inspecoes/B/<int:id_brigadista>', methods=['GET'])
 def listar_inspecao_brigadista(id_brigadista):
     resultados = consultar_todos_sql(
@@ -328,13 +303,10 @@ def listar_inspecao_brigadista(id_brigadista):
         "WHERE i.id_brigadista = %s", 
         (id_brigadista,)
     )
-    
     if resultados:
         return jsonify(resultados), 200
-        
     return jsonify({"mensagem": "Nenhuma inspeção encontrada para este brigadista."}), 404
 
-#Atualizar Inspeções
 @app.route('/api/inspecoes/<int:id_inspecao>', methods=['PUT'])
 def atualizar_inspecao(id_inspecao):
     dados = request.get_json()
@@ -358,7 +330,6 @@ def deletar_inspecao(id_inspecao):
 @app.route('/api/notificar-extintores-vencendo', methods=['POST'])
 def notificar_extintores_vencendo():
     try:
-        # Busca os extintores vencendo nos próximos 30 dias
         sql = """
             SELECT e.numero_patrimonio, e.tipo_agente, e.validade_carga, s.nome_setor, s.bloco_pavimento, b.nome_brigadista, b.telefone, b.whatsapp
             FROM extintores e
@@ -370,16 +341,14 @@ def notificar_extintores_vencendo():
 
         contador = 0
         for reg in expirando:
-            # 1. Tratamento e limpeza prévia dos números do banco
             tel_sms = formatar_para_twilio(reg['telefone'])
             tel_wa = formatar_para_twilio(reg['whatsapp'])
 
-            # 2. [span_0](start_span)Validação Defensiva: Se nenhum número prestar, pula o registro (Evita Erro Twilio 21604)[span_0](end_span)
+            # Validação defensiva (Evita o erro de requisição Twilio 21604)
             if (not tel_sms or len(tel_sms) < 12) and (not tel_wa or len(tel_wa) < 12):
-                [span_1](start_span)print(f"Aviso: Registro do brigadista {reg['nome_brigadista']} ignorado por inconsistência nos números.")[span_1](end_span)
+                print(f"Aviso: Registro do brigadista {reg['nome_brigadista']} ignorado por falta de números válidos.")
                 continue
 
-            # Texto do aviso formatado
             mensagem = (
                 f"Ola {reg['nome_brigadista']}! O extintor de {reg['tipo_agente']} "
                 f"(Patrimonio: {reg['numero_patrimonio']}) localizado no setor {reg['nome_setor']} "
@@ -387,12 +356,12 @@ def notificar_extintores_vencendo():
                 f"Por favor, providencie a recarga."
             )
 
-            # 3. Disparos condicionados à existência de números válidos
             if tel_sms and len(tel_sms) >= 12:
                 enviar_sms(tel_sms, mensagem)
-                
+
+            # CORRIGIDO: Parâmetros alinhados com a definição da função enviar_whatsapp
             if tel_wa and len(tel_wa) >= 12:
-                enviar_whatsapp(tel_wa, message=mensagem) # CORRIGIDO: parâmetro de texto alinhado com a função
+                enviar_whatsapp(tel_wa, mensagem)
 
             contador += 1
 
@@ -402,3 +371,6 @@ def notificar_extintores_vencendo():
 
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=5000, debug=True)
