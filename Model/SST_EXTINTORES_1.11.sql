@@ -1,100 +1,94 @@
 -- CASO OCORRA ERROS
-drop database sst_extintores_db;
+DROP DATABASE IF EXISTS sst_extintores_db;
 
 
 -- CRIAR O BANCO DE DADOS
-create database sst_extintores_db;
+CREATE DATABASE sst_extintores_db;
 USE sst_extintores_db;
 
 
 -- TABELA DIMENSÃO
-create table setores_loc (
-	id_setor int auto_increment primary key,
-    nome_setor varchar(100) not null,
-    bloco_pavimento varchar(50) not null
-    ) ENGINE=InnoDB;
+CREATE TABLE setores_loc (
+    id_setor INT AUTO_INCREMENT PRIMARY KEY,
+    nome_setor VARCHAR(100) NOT NULL,
+    bloco_pavimento VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
 
 
-
-    -- TABELA DIMENSÃO
-create table brigadistas (
-	id_brigadista int auto_increment primary key,
-    nome_brigadista varchar(50),
-    cpf varchar(20) unique not null,
-    telefone varchar(20) not null,
-    email varchar(320),
-    whatsapp varchar(20),
-    data_treinamento date,
-    id_setor int not null,
-    foreign key (id_setor) references setores_loc(id_setor) on delete restrict
-    ) ENGINE=InnoDB;
+-- TABELA DIMENSÃO
+CREATE TABLE brigadistas (
+    id_brigadista INT AUTO_INCREMENT PRIMARY KEY,
+    nome_brigadista VARCHAR(50),
+    cpf VARCHAR(20) UNIQUE NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    email VARCHAR(320),
+    whatsapp VARCHAR(20),
+    data_treinamento DATE,
+    id_setor INT NOT NULL,
+    FOREIGN KEY (id_setor) REFERENCES setores_loc(id_setor) ON DELETE RESTRICT
+) ENGINE=InnoDB;
     
     
 -- TABELA DIMENSÃO
-create table extintores (
-	numero_patrimonio varchar(50) primary key,
-    id_setor int not null,
-    codigo_lacre varchar(30) unique not null,
-    tipo_agente enum ("Água", "PQS", "CO2", "Espuma") not null,
-    classe_incendio enum ("A", "B", "AB", "ABC", "BC"),
-    localizacao_detalhada varchar(150) not null,
-    validade_carga date not null,
-	data_aquisicao date not null,
-    data_ultima_recarga date not null,
-    extintor_status enum ("Disponível", "Vencido", "Em manutenção", "Reserva", "Condenado"),
-    foreign key (id_setor) references setores_loc(id_setor) on delete restrict
-    ) ENGINE=InnoDB;
+CREATE TABLE extintores (
+    numero_patrimonio VARCHAR(50) PRIMARY KEY,
+    id_setor INT NOT NULL,
+    codigo_lacre VARCHAR(30) UNIQUE NOT NULL,
+    tipo_agente ENUM ("Água", "PQS", "CO2", "Espuma") NOT NULL,
+    classe_incendio ENUM ("A", "B", "AB", "ABC", "BC"),
+    localizacao_detalhada VARCHAR(150) NOT NULL,
+    validade_carga DATE NOT NULL,
+    data_aquisicao DATE NOT NULL,
+    data_ultima_recarga DATE NOT NULL,
+    extintor_status ENUM ("Disponível", "Vencido", "Em manutenção", "Reserva", "Condenado"),
+    FOREIGN KEY (id_setor) REFERENCES setores_loc(id_setor) ON DELETE RESTRICT
+) ENGINE=InnoDB;
     
     
-    -- TABELA FATO
-create table inspecoes_extintores (
-	id_inspecao int auto_increment primary key,
-    id_brigadista int not null,
-    numero_patrimonio varchar(50),
-    data_inspecao datetime not null,
-    status_manometro enum ("Pressão Padrão", "Baixa Pressão", "Alta Pressão") not null,
-    status_carga enum ("Cheio", "Vazio", "Parcial") not null,
-    status_agente_disparo enum ("Conforme", "Inconforme") not null,
-    lacre_rompido tinyint default 0,
-    data_teste_nivel1 date not null,
-    data_teste_nivel2 date not null,
-    data_teste_nivel3 date not null,
-    data_vencimento_nivel1 date not null,
-    data_vencimento_nivel2 date not null,
-    data_vencimento_nivel3 date not null,
-    integridade_visual enum ("Excelente", "Avariado/Amassado", "Corroído") not null,
-    arquivo_evidencia_imagem_path varchar(255) not null,
-    foreign key (numero_patrimonio) references extintores(numero_patrimonio) on delete restrict,
-    foreign key (id_brigadista) references brigadistas(id_brigadista) on delete restrict
-    ) ENGINE=InnoDB;
+-- TABELA FATO
+CREATE TABLE inspecoes_extintores (
+    id_inspecao INT AUTO_INCREMENT PRIMARY KEY,
+    id_brigadista INT NOT NULL,
+    numero_patrimonio VARCHAR(50),
+    data_inspecao DATETIME NOT NULL,
+    status_manometro ENUM ("Pressão Padrão", "Baixa Pressão", "Alta Pressão") NOT NULL,
+    status_carga ENUM ("Cheio", "Vazio", "Parcial") NOT NULL,
+    status_agente_disparo ENUM ("Conforme", "Inconforme") NOT NULL,
+    lacre_rompido TINYINT DEFAULT 0,
+    data_teste_nivel1 DATE NOT NULL,
+    data_teste_nivel2 DATE NOT NULL,
+    data_teste_nivel3 DATE NOT NULL,
+    data_vencimento_nivel1 DATE NOT NULL,
+    data_vencimento_nivel2 DATE NOT NULL,
+    data_vencimento_nivel3 DATE NOT NULL,
+    integridade_visual ENUM ("Excelente", "Avariado/Amassado", "Corroído") NOT NULL,
+    arquivo_evidencia_imagem_path VARCHAR(255) NOT NULL,
+    FOREIGN KEY (numero_patrimonio) REFERENCES extintores(numero_patrimonio) ON DELETE RESTRICT,
+    FOREIGN KEY (id_brigadista) REFERENCES brigadistas(id_brigadista) ON DELETE RESTRICT
+) ENGINE=InnoDB;
     
     
+-- Desativa temporariamente a trava de segurança para permitir o update em massa
+SET SQL_SAFE_UPDATES = 0;
+
+-- Calculando vencimentos na tabela inspecoes_extintores (CORRIGIDO: 'inspecoes' sem ç)
+UPDATE inspecoes_extintores
+SET 
+    -- Nível 1 (Inspeção Visual) Deve ser realizada mensalmente: Validade de 1 mês 
+    data_vencimento_nivel1 = DATE_ADD(data_teste_nivel1, INTERVAL 1 MONTH),
     
--- Calculando vencimentos na tabela inspecoes_extintores
-    update inspeçoes_extintores
-    set 
-		-- Nível 1 (Inspeção Visual) Deve ser realizada mensalmente: Validade de 1 mês 
-        data_vencimento_nivel1 = date_add(data_teste_nivel1, interval 1 month),
-        
-        -- Nível 2 (Recarrga/Preventiva) Ocorre a cada 12 meses: Validade de 1 ano (12 meses)
-        data_vencimento_nivel2 = date_add(data_teste_nivel2, interval 1 year),
-        
-        -- Nível 3 (Teste Hidrostático): Validade de 5 anos
-        data_vencimento_nivel3 = date_add(data_teste_nivel3, interval 5 year);
+    -- Nível 2 (Recarga/Preventiva) Ocorre a cada 12 meses: Validade de 1 ano (12 meses)
+    data_vencimento_nivel2 = DATE_ADD(data_teste_nivel2, INTERVAL 1 YEAR),
+    
+    -- Nível 3 (Teste Hidrostático): Validade de 5 anos
+    data_vencimento_nivel3 = DATE_ADD(data_teste_nivel3, INTERVAL 5 YEAR);
+
+-- Reativa a trava de segurança do Workbench
+SET SQL_SAFE_UPDATES = 1;
         
 -- Teste de Cálculo Direto (Sem Inserir Dados)
-	SELECT
-		'2024-06-17' as data_teste,
-        DATE_ADD('2024-06-17', INTERVAL 1 MONTH) AS vencimento_nivel1, -- Esperado: 2024-07-17
-		DATE_ADD('2024-06-17', INTERVAL 1 YEAR) AS vencimento_nivel2,  -- Esperado: 2025-06-17
-		DATE_ADD('2024-06-17', INTERVAL 5 YEAR) AS vencimento_nivel3;  -- Esperado: 2029-06-17
-
-	
-
-    
-    
-
-
-    
-    
-    
+SELECT
+    '2024-06-17' AS data_teste,
+    DATE_ADD('2024-06-17', INTERVAL 1 MONTH) AS vencimento_nivel1, -- Esperado: 2024-07-17
+    DATE_ADD('2024-06-17', INTERVAL 1 YEAR) AS vencimento_nivel2,  -- Esperado: 2025-06-17
+    DATE_ADD('2024-06-17', INTERVAL 5 YEAR) AS vencimento_nivel3;  -- Esperado: 2029-06-17
