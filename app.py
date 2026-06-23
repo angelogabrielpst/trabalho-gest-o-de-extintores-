@@ -358,7 +358,7 @@ def deletar_inspecao(id_inspecao):
 @app.route('/api/notificar-extintores-vencendo', methods=['POST'])
 def notificar_extintores_vencendo():
     try:
-        # Busca os extintores vencendo e junta com os brigadistas do mesmo setor para notificá-los
+        # Busca os extintores vencendo nos próximos 30 dias
         sql = """
             SELECT e.numero_patrimonio, e.tipo_agente, e.validade_carga, s.nome_setor, s.bloco_pavimento, b.nome_brigadista, b.telefone, b.whatsapp
             FROM extintores e
@@ -367,31 +367,38 @@ def notificar_extintores_vencendo():
             WHERE e.validade_carga BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
         """
         expirando = consultar_todos_sql(sql)
-        
+
         contador = 0
         for reg in expirando:
-            # Texto do disparo
+            # 1. Tratamento e limpeza prévia dos números do banco
+            tel_sms = formatar_para_twilio(reg['telefone'])
+            tel_wa = formatar_para_twilio(reg['whatsapp'])
+
+            # 2. [span_0](start_span)Validação Defensiva: Se nenhum número prestar, pula o registro (Evita Erro Twilio 21604)[span_0](end_span)
+            if (not tel_sms or len(tel_sms) < 12) and (not tel_wa or len(tel_wa) < 12):
+                [span_1](start_span)print(f"Aviso: Registro do brigadista {reg['nome_brigadista']} ignorado por inconsistência nos números.")[span_1](end_span)
+                continue
+
+            # Texto do aviso formatado
             mensagem = (
                 f"Ola {reg['nome_brigadista']}! O extintor de {reg['tipo_agente']} "
                 f"(Patrimonio: {reg['numero_patrimonio']}) localizado no setor {reg['nome_setor']} "
                 f"({reg['bloco_pavimento']}) vai vencer em breve na data: {reg['validade_carga']}. "
                 f"Por favor, providencie a recarga."
             )
-            
-            # Envia para os brigadistas
-            if reg['telefone']:
-                enviar_sms(reg['telefone'], mensagem)
-            if reg['whatsapp']:
-                enviar_whatsapp(reg['whatsapp'], message=mensagem)
+
+            # 3. Disparos condicionados à existência de números válidos
+            if tel_sms and len(tel_sms) >= 12:
+                enviar_sms(tel_sms, mensagem)
                 
+            if tel_wa and len(tel_wa) >= 12:
+                enviar_whatsapp(tel_wa, message=mensagem) # CORRIGIDO: parâmetro de texto alinhado com a função
+
             contador += 1
-            
+
         return jsonify({
             "mensagem": f"Sucesso! {contador} alertas de extintores a vencer foram enviados aos brigadistas dos setores responsáveis."
         }), 200
-        
+
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
