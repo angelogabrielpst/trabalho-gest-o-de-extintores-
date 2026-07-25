@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SST Extintores | Sistema de Gestão</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+      <div class="container-fluid px-3 px-lg-4">
+        <a class="navbar-brand d-flex align-items-center gap-3" href="#">
+          <span class="brand-mark">SST</span>
+          <span>
+            <strong>SST Extintores</strong>
+            <small class="d-block">Gestão, inspeção e vencimentos</small>
+          </span>
+        </a>
+
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <div class="api-pill d-none d-sm-flex">
+            <span id="api-dot" class="api-dot"></span>
+            <span id="api-status-text">Conectando</span>
+          </div>
+          <button
+            id="btn-refresh"
+            class="btn btn-light btn-sm rounded-pill px-3"
+            type="button"
+          >
+            Atualizar
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="top-tabs-wrap">
+      <div class="container-fluid px-3 px-lg-4">
+        <div class="tab-shell">
+          <ul
+            class="nav nav-pills app-tabs flex-nowrap overflow-auto"
+            id="mainTabs"
+            role="tablist"
+          >
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active"
+                id="dashboard-tab"
+                data-bs-toggle="pill"
+                data-bs-target="#dashboard"
+                data-view="dashboard"
+                type="button"
+                role="tab"
+              >
+                Dashboard
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="setores-tab"
+                data-bs-toggle="pill"
+                data-bs-target="#setores"
+                data-view="setores"
+                type="button"
+                role="tab"
+              >
+                Setores
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="brigadistas-tab"
+                data-bs-toggle="pill"
+                data-bs-target="#brigadistas"
+                data-view="brigadistas"
+                type="button"
+                role="tab"
+              >
+                Brigadistas
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="extintores-tab"
+                data-bs-toggle="pill"
+                data-bs-target="#extintores"
+                data-view="extintores"
+                type="button"
+                role="tab"
+              >
+                Extintores
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="inspecoes-tab"
+                data-bs-toggle="pill"
+                data-bs-target="#inspecoes"
+                data-view="inspecoes"
+                type="button"
+                role="tab"
+              >
+                Inspeções
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="notificacoes-tab"
+                data-bs-toggle="pill"
+                data-bs-target="#notificacoes"
+                data-view="notificacoes"
+                type="button"
+                role="tab"
+              >
+                Notificações
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <main class="container-fluid px-3 px-lg-4 py-4">
+      <section class="hero-section mb-4">
+        <div class="row g-4 align-items-center">
+          <div class="col-lg-8">
+            <span class="hero-kicker">Sistema de Segurança do Trabalho</span>
+            <h1>Gestão profissional de extintores, inspeções e vencimentos.</h1>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <button
+                class="btn btn-gradient"
+                type="button"
+                data-open-tab="extintores"
+              >
+                Cadastrar extintor
+              </button>
+              <button
+                class="btn btn-outline-light"
+                type="button"
+                data-open-tab="inspecoes"
+              >
+                Nova inspeção
+              </button>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="hero-card">
+              <div class="hero-card-icon">SST</div>
+              <h2 id="view-title">Dashboard</h2>
+              <span class="hero-card-badge" id="view-subtitle"
+                >Painel principal</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="toast"
+        class="app-toast hidden"
+        role="status"
+        aria-live="polite"
+      ></section>
+
+      <div class="tab-content" id="mainTabsContent">
+        <section
+          id="dashboard"
+          class="tab-pane fade show active"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab"
+        >
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-2">
+              <article class="metric-card metric-blue">
+                <span>Setores</span>
+                <strong id="card-setores">0</strong>
+                <small>Locais monitorados</small>
+              </article>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+              <article class="metric-card metric-green">
+                <span>Brigadistas</span>
+                <strong id="card-brigadistas">0</strong>
+                <small>Responsáveis</small>
+              </article>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+              <article class="metric-card metric-orange">
+                <span>Extintores</span>
+                <strong id="card-extintores">0</strong>
+                <small>Equipamentos</small>
+              </article>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+              <article class="metric-card metric-purple">
+                <span>Inspeções</span>
+                <strong id="card-inspecoes">0</strong>
+                <small>Registros</small>
+              </article>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+              <article class="metric-card metric-red">
+                <span>Vencidos</span>
+                <strong id="card-vencidos">0</strong>
+                <small>Atenção imediata</small>
+              </article>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+              <article class="metric-card metric-yellow">
+                <span>Vencem em 30 dias</span>
+                <strong id="card-vencendo">0</strong>
+                <small>Planejar recarga</small>
+              </article>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-xl-8">
+              <div class="app-card h-100">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Monitoramento</span>
+                    <h3>Próximos vencimentos</h3>
+                  </div>
+                  <button
+                    class="btn btn-sm btn-outline-danger rounded-pill"
+                    data-open-tab="notificacoes"
+                    type="button"
+                  >
+                    Ver notificações
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>Patrimônio</th>
+                        <th>Tipo</th>
+                        <th>Setor</th>
+                        <th>Validade</th>
+                        <th>Dias</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dashboard-vencimentos"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-4">
+              <div class="app-card h-100">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Distribuição</span>
+                    <h3>Extintores por status</h3>
+                  </div>
+                </div>
+                <div id="dashboard-status-bars" class="chart-list"></div>
+
+                <hr />
+
+                <div class="section-heading compact">
+                  <div>
+                    <span class="section-kicker">Agentes</span>
+                    <h3>Tipos de extintor</h3>
+                  </div>
+                </div>
+                <div id="dashboard-agent-bars" class="chart-list"></div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="app-card">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Histórico</span>
+                    <h3>Últimas inspeções</h3>
+                  </div>
+                  <button
+                    class="btn btn-sm btn-outline-primary rounded-pill"
+                    data-open-tab="inspecoes"
+                    type="button"
+                  >
+                    Abrir inspeções
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Patrimônio</th>
+                        <th>Brigadista</th>
+                        <th>Tipo</th>
+                        <th>Data</th>
+                        <th>Venc. Nível 1</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dashboard-inspecoes"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="setores"
+          class="tab-pane fade"
+          role="tabpanel"
+          aria-labelledby="setores-tab"
+        >
+          <div class="row g-4">
+            <div class="col-lg-4">
+              <form id="form-setor" class="app-card form-card">
+                <input type="hidden" name="id_setor" />
+                <h3>Cadastrar setor</h3>
+                <div class="mb-3">
+                  <label class="form-label">Nome do setor</label>
+                  <input
+                    class="form-control"
+                    name="nome_setor"
+                    type="text"
+                    placeholder="Ex: Produção"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Bloco / Pavimento</label>
+                  <input
+                    class="form-control"
+                    name="bloco_pavimento"
+                    type="text"
+                    placeholder="Ex: Bloco A - Térreo"
+                    required
+                  />
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-gradient" type="submit">
+                    Salvar setor
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    data-reset="form-setor"
+                  >
+                    Limpar
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div class="col-lg-8">
+              <div class="app-card">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Cadastro</span>
+                    <h3>Setores cadastrados</h3>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Setor</th>
+                        <th>Bloco</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabela-setores"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="brigadistas"
+          class="tab-pane fade"
+          role="tabpanel"
+          aria-labelledby="brigadistas-tab"
+        >
+          <div class="row g-4">
+            <div class="col-lg-4">
+              <form id="form-brigadista" class="app-card form-card">
+                <input type="hidden" name="id_brigadista" />
+                <h3>Cadastrar brigadista</h3>
+                <div class="mb-3">
+                  <label class="form-label">Nome</label>
+                  <input
+                    class="form-control"
+                    name="nome_brigadista"
+                    type="text"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">CPF</label>
+                  <input
+                    class="form-control"
+                    name="cpf"
+                    type="text"
+                    placeholder="000.000.000-00"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Telefone</label>
+                  <input
+                    class="form-control"
+                    name="telefone"
+                    type="text"
+                    placeholder="(31) 99999-9999"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">WhatsApp</label>
+                  <input
+                    class="form-control"
+                    name="whatsapp"
+                    type="text"
+                    placeholder="(31) 99999-9999"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">E-mail</label>
+                  <input
+                    class="form-control"
+                    name="email"
+                    type="email"
+                    placeholder="nome@email.com"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Data do treinamento</label>
+                  <input
+                    class="form-control"
+                    name="data_treinamento"
+                    type="date"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Setor</label>
+                  <select
+                    class="form-select"
+                    name="id_setor"
+                    data-select="setores"
+                    required
+                  ></select>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-gradient" type="submit">
+                    Salvar brigadista
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    data-reset="form-brigadista"
+                  >
+                    Limpar
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div class="col-lg-8">
+              <div class="app-card">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Equipe</span>
+                    <h3>Brigadistas cadastrados</h3>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Telefone</th>
+                        <th>Setor</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabela-brigadistas"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="extintores"
+          class="tab-pane fade"
+          role="tabpanel"
+          aria-labelledby="extintores-tab"
+        >
+          <div class="row g-4">
+            <div class="col-xl-4">
+              <form id="form-extintor" class="app-card form-card">
+                <input type="hidden" name="edit_numero_patrimonio" />
+                <h3>Cadastrar extintor</h3>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label">Número de patrimônio</label>
+                    <input
+                      class="form-control"
+                      name="numero_patrimonio"
+                      type="text"
+                      placeholder="EXT-001"
+                      required
+                    />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Setor</label>
+                    <select
+                      class="form-select"
+                      name="id_setor"
+                      data-select="setores"
+                      required
+                    ></select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Código do lacre</label>
+                    <input
+                      class="form-control"
+                      name="codigo_lacre"
+                      type="text"
+                      placeholder="LAC-001"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Tipo de agente</label>
+                    <select class="form-select" name="tipo_agente" required>
+                      <option value="Água">Água</option>
+                      <option value="PQS">PQS</option>
+                      <option value="CO2">CO2</option>
+                      <option value="Espuma">Espuma</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Classe</label>
+                    <select class="form-select" name="classe_incendio" required>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="AB">AB</option>
+                      <option value="ABC">ABC</option>
+                      <option value="BC">BC</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Localização detalhada</label>
+                    <input
+                      class="form-control"
+                      name="localizacao_detalhada"
+                      type="text"
+                      placeholder="Ex: Corredor principal"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Validade da carga</label>
+                    <input
+                      class="form-control"
+                      name="validade_carga"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Data de aquisição</label>
+                    <input
+                      class="form-control"
+                      name="data_aquisicao"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Última recarga</label>
+                    <input
+                      class="form-control"
+                      name="data_ultima_recarga"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="extintor_status" required>
+                      <option value="Disponível">Disponível</option>
+                      <option value="Vencido">Vencido</option>
+                      <option value="Em manutenção">Em manutenção</option>
+                      <option value="Reserva">Reserva</option>
+                      <option value="Condenado">Condenado</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                  <button class="btn btn-gradient" type="submit">
+                    Salvar extintor
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    data-reset="form-extintor"
+                  >
+                    Limpar
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div class="col-xl-8">
+              <div class="app-card">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Equipamentos</span>
+                    <h3>Extintores cadastrados</h3>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>Patrimônio</th>
+                        <th>Tipo</th>
+                        <th>Classe</th>
+                        <th>Setor</th>
+                        <th>Validade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabela-extintores"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="inspecoes"
+          class="tab-pane fade"
+          role="tabpanel"
+          aria-labelledby="inspecoes-tab"
+        >
+          <div class="row g-4">
+            <div class="col-xl-4">
+              <form id="form-inspecao" class="app-card form-card">
+                <input type="hidden" name="id_inspecao" />
+                <h3>Cadastrar inspeção</h3>
+                <div class="mb-3">
+                  <label class="form-label">Brigadista</label>
+                  <select
+                    class="form-select"
+                    name="id_brigadista"
+                    data-select="brigadistas"
+                    required
+                  ></select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Extintor</label>
+                  <select
+                    class="form-select"
+                    name="numero_patrimonio"
+                    data-select="extintores"
+                    required
+                  ></select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Data da inspeção</label>
+                  <input
+                    class="form-control"
+                    name="data_inspecao"
+                    type="datetime-local"
+                    required
+                  />
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Manômetro</label>
+                    <select
+                      class="form-select"
+                      name="status_manometro"
+                      required
+                    >
+                      <option value="Pressão Padrão">Pressão Padrão</option>
+                      <option value="Baixa Pressão">Baixa Pressão</option>
+                      <option value="Alta Pressão">Alta Pressão</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Carga</label>
+                    <select class="form-select" name="status_carga" required>
+                      <option value="Cheio">Cheio</option>
+                      <option value="Vazio">Vazio</option>
+                      <option value="Parcial">Parcial</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Disparo</label>
+                    <select
+                      class="form-select"
+                      name="status_agente_disparo"
+                      required
+                    >
+                      <option value="Conforme">Conforme</option>
+                      <option value="Inconforme">Inconforme</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Visual</label>
+                    <select
+                      class="form-select"
+                      name="integridade_visual"
+                      required
+                    >
+                      <option value="Excelente">Excelente</option>
+                      <option value="Avariado/Amassado">
+                        Avariado/Amassado
+                      </option>
+                      <option value="Corroído">Corroído</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        name="lacre_rompido"
+                        type="checkbox"
+                        role="switch"
+                        id="lacre-rompido"
+                      />
+                      <label class="form-check-label" for="lacre-rompido"
+                        >Lacre rompido</label
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Teste nível 1</label>
+                    <input
+                      class="form-control"
+                      name="data_teste_nivel1"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Teste nível 2</label>
+                    <input
+                      class="form-control"
+                      name="data_teste_nivel2"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Teste nível 3</label>
+                    <input
+                      class="form-control"
+                      name="data_teste_nivel3"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Caminho da evidência</label>
+                    <input
+                      class="form-control"
+                      name="arquivo_evidencia_imagem_path"
+                      type="text"
+                      placeholder="sem_arquivo"
+                    />
+                  </div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                  <button class="btn btn-gradient" type="submit">
+                    Salvar inspeção
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    data-reset="form-inspecao"
+                  >
+                    Limpar
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div class="col-xl-8">
+              <div class="app-card">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Histórico</span>
+                    <h3>Inspeções cadastradas</h3>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Patrimônio</th>
+                        <th>Brigadista</th>
+                        <th>Data</th>
+                        <th>Manômetro</th>
+                        <th>Venc. Nível 1</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabela-inspecoes"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="notificacoes"
+          class="tab-pane fade"
+          role="tabpanel"
+          aria-labelledby="notificacoes-tab"
+        >
+          <div class="row g-4">
+            <div class="col-lg-4">
+              <div class="app-card form-card">
+                <h3>Gerar alertas</h3>
+                <div class="mb-3">
+                  <label class="form-label">Dias de alerta</label>
+                  <input
+                    id="dias-alerta"
+                    class="form-control"
+                    type="number"
+                    value="30"
+                    min="1"
+                    max="365"
+                  />
+                </div>
+                <button
+                  id="btn-verificar-vencimentos"
+                  class="btn btn-gradient"
+                  type="button"
+                >
+                  Verificar vencimentos
+                </button>
+              </div>
+            </div>
+            <div class="col-lg-8">
+              <div class="app-card">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">Alertas</span>
+                    <h3>Notificações cadastradas</h3>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Patrimônio</th>
+                        <th>Brigadista</th>
+                        <th>Dias</th>
+                        <th>Enviado</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabela-notificacoes"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
